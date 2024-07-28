@@ -13,13 +13,14 @@
 #include "GamepadMotion.hpp"
 #include "JoyShock.cpp"
 #include "InputHelpers.cpp"
+#include <functional>
 
 std::shared_timed_mutex _callbackLock;
 std::shared_timed_mutex _connectedLock;
-void(*_pollCallback)(int, JOY_SHOCK_STATE, JOY_SHOCK_STATE, IMU_STATE, IMU_STATE, float) = nullptr;
-void(*_pollTouchCallback)(int, TOUCH_STATE, TOUCH_STATE, float) = nullptr;
-void(*_connectCallback)(int) = nullptr;
-void(*_disconnectCallback)(int, bool) = nullptr;
+std::function<void(int, JOY_SHOCK_STATE, JOY_SHOCK_STATE, IMU_STATE, IMU_STATE, float)> _pollCallback = nullptr;
+std::function<void(int, TOUCH_STATE, TOUCH_STATE, float)> _pollTouchCallback = nullptr;
+std::function<void(int)> _connectCallback = nullptr;
+std::function<void(int, bool)> _disconnectCallback = nullptr;
 std::unordered_map<int, JoyShock*> _joyshocks;
 std::unordered_map<std::string, JoyShock*> _byPath;
 std::mutex _pathHandleLock;
@@ -961,7 +962,7 @@ JSL_AUTO_CALIBRATION JslGetAutoCalibrationStatus(int deviceId) {
 }
 
 // this function will get called for each input event from each controller
-void JslSetCallback(void(*callback)(int, JOY_SHOCK_STATE, JOY_SHOCK_STATE, IMU_STATE, IMU_STATE, float)) {
+void JslSetCallback(std::function<void(int, JOY_SHOCK_STATE, JOY_SHOCK_STATE, IMU_STATE, IMU_STATE, float)> callback) {
 	// exclusive lock
 	_callbackLock.lock();
 	_pollCallback = callback;
@@ -969,14 +970,14 @@ void JslSetCallback(void(*callback)(int, JOY_SHOCK_STATE, JOY_SHOCK_STATE, IMU_S
 }
 
 // this function will get called for each input event, even if touch data didn't update
-void JslSetTouchCallback(void(*callback)(int, TOUCH_STATE, TOUCH_STATE, float)) {
+void JslSetTouchCallback(std::function<void(int, TOUCH_STATE, TOUCH_STATE, float)> callback) {
 	_callbackLock.lock();
 	_pollTouchCallback = callback;
 	_callbackLock.unlock();
 }
 
 // this function will get called for each device when it is newly connected
-void JslSetConnectCallback(void(*callback)(int)) {
+void JslSetConnectCallback(std::function<void(int)> callback) {
 	// exclusive lock
 	_callbackLock.lock();
 	_connectCallback = callback;
@@ -984,7 +985,7 @@ void JslSetConnectCallback(void(*callback)(int)) {
 }
 
 // this function will get called for each device when it is disconnected (and whether it was a timeout (true))
-void JslSetDisconnectCallback(void(*callback)(int, bool)) {
+void JslSetDisconnectCallback(std::function<void(int, bool)> callback) {
 	// exclusive lock
 	_callbackLock.lock();
 	_disconnectCallback = callback;

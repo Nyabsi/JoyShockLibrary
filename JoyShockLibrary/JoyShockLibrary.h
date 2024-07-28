@@ -7,6 +7,8 @@
 #define JOY_SHOCK_API // XCode does not need annotating exported functions, so define is empty
 #endif
 
+#include <functional>
+
 #define JS_TYPE_JOYCON_LEFT 1
 #define JS_TYPE_JOYCON_RIGHT 2
 #define JS_TYPE_PRO_CONTROLLER 3
@@ -228,13 +230,13 @@ extern "C" JOY_SHOCK_API void JslSetCalibrationOffset(int deviceId, float xOffse
 extern "C" JOY_SHOCK_API JSL_AUTO_CALIBRATION JslGetAutoCalibrationStatus(int deviceId);
 
 // this function will get called for each input event from each controller
-extern "C" JOY_SHOCK_API void JslSetCallback(void(*callback)(int, JOY_SHOCK_STATE, JOY_SHOCK_STATE, IMU_STATE, IMU_STATE, float));
+extern "C" JOY_SHOCK_API void JslSetCallback(std::function<void(int, JOY_SHOCK_STATE, JOY_SHOCK_STATE, IMU_STATE, IMU_STATE, float)>);
 // this function will get called for each input event, even if touch data didn't update
-extern "C" JOY_SHOCK_API void JslSetTouchCallback(void(*callback)(int, TOUCH_STATE, TOUCH_STATE, float));
+extern "C" JOY_SHOCK_API void JslSetTouchCallback(std::function<void(int, TOUCH_STATE, TOUCH_STATE, float)>);
 // this function will get called for each device when it is newly connected
-extern "C" JOY_SHOCK_API void JslSetConnectCallback(void(*callback)(int));
+extern "C" JOY_SHOCK_API void JslSetConnectCallback(std::function<void(int)>);
 // this function will get called for each device when it is disconnected
-extern "C" JOY_SHOCK_API void JslSetDisconnectCallback(void(*callback)(int, bool));
+extern "C" JOY_SHOCK_API void JslSetDisconnectCallback(std::function<void(int, bool)>);
 
 // super-getter for reading a whole lot of state at once
 extern "C" JOY_SHOCK_API JSL_SETTINGS JslGetControllerInfoAndSettings(int deviceId);
